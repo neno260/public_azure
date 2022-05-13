@@ -1,0 +1,258 @@
+{
+    "properties": {
+        "provisioningState": "Succeeded",
+        "createdTime": "2022-04-25T11:05:08.8739957Z",
+        "changedTime": "2022-04-26T10:46:44.8859462Z",
+        "state": "Enabled",
+        "version": "08585506368805928686",
+        "accessEndpoint": prod-07.xxxxRegionxxxx.logic.azure.com:443/workflows/xxxxAZ_provided_endpointxxxx,
+        "definition": {
+            "$schema": https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#,
+            "contentVersion": "1.0.0.0",
+            "parameters": {
+                "$connections": {
+                    "defaultValue": {},
+                    "type": "Object"
+                }
+            },
+            "triggers": {
+                "manual": {
+                    "type": "Request",
+                    "kind": "Http",
+                    "inputs": {
+                        "schema": {
+                            "properties": {
+                                "Action": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "actions": {
+                "Switch": {
+                    "runAfter": {},
+                    "cases": {
+                        "Case": {
+                            "case": "deploy",
+                            "actions": {
+                                "Create_or_update_a_template_deployment": {
+                                    "runAfter": {},
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "body": {
+                                            "properties": {
+                                                "mode": "Incremental",
+                                                "parameters": {
+                                                    "bastionHosts_name": {
+                                                        "value": "sftppocbastion"
+                                                    },
+                                                    "bastion_location": {
+                                                        "value": "xxxxRegionxxxx"
+                                                    },
+                                                    "publicIPAddresses_externalid": {
+                                                        "value": "/subscriptions/xxxxsub_IDxxxxx/resourceGroups/sftppoc/providers/Microsoft.Network/publicIPAddresses/sftppocvnetip238"
+                                                    },
+                                                    "virtualNetworks__externalid": {
+                                                        "value": "/subscriptions/xxxxsub_IDxxxx/resourceGroups/sftppoc/providers/Microsoft.Network/virtualNetworks/sftppoc-vnet"
+                                                    }
+                                                },
+                                                "template": {
+                                                    "$schema": https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#,
+                                                    "contentVersion": "1.0.0.0",
+                                                    "parameters": {
+                                                        "bastionHosts_name": {
+                                                            "type": "String"
+                                                        },
+                                                        "bastion_location": {
+                                                            "type": "String"
+                                                        },
+                                                        "publicIPAddresses_externalid": {
+                                                            "type": "String"
+                                                        },
+                                                        "virtualNetworks__externalid": {
+                                                            "type": "String"
+                                                        }
+                                                    },
+                                                    "resources": [
+                                                        {
+                                                            "apiVersion": "2020-05-01",
+                                                            "location": "[parameters('bastion_location')]",
+                                                            "name": "[parameters('bastionHosts_name')]",
+                                                            "properties": {
+                                                                "ipConfigurations": [
+                                                                    {
+                                                                        "name": "IpConf",
+                                                                        "properties": {
+                                                                            "privateIPAllocationMethod": "Dynamic",
+                                                                            "publicIPAddress": {
+                                                                                "id": "[parameters('publicIPAddresses_externalid')]"
+                                                                            },
+                                                                            "subnet": {
+                                                                                "id": "[concat(parameters('virtualNetworks__externalid'), '/subnets/AzureBastionSubnet')]"
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "type": "Microsoft.Network/bastionHosts"
+                                                        }
+                                                    ],
+                                                    "variables": {}
+                                                }
+                                            }
+                                        },
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['arm']['connectionId']"
+                                            }
+                                        },
+                                        "method": "put",
+                                        "path": /subscriptions/@{encodeURIComponent('xxxxAZ_endpointxxxx')}/resourcegroups/@{encodeURIComponent('sftppoc')}/providers/Microsoft.Resources/deployments/@{encodeURIComponent('Bastionsftppoc')},
+                                        "queries": {
+                                            "wait": true,
+                                            "x-ms-api-version": "2016-06-01"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "Case_2": {
+                            "case": "delete",
+                            "actions": {
+                                "HTTP": {
+                                    "runAfter": {},
+                                    "type": "Http",
+                                    "inputs": {
+                                        "authentication": {
+                                            "type": "ManagedServiceIdentity"
+                                        },
+                                        "method": "DELETE",
+                                        "uri": https://management.azure.com/subscriptions/xxxxSUB_IDxxxx/resourceGroups/sftppoc/providers/Microsoft.Network/bastionHosts/sftppocbastion/?api-version=2020-06-01
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "actions": {}
+                    },
+                    "expression": "@triggerBody()?['Action']",
+                    "trackedProperties": {
+                        "Action": ""
+                    },
+                    "type": "Switch"
+                }
+            },
+            "outputs": {}
+        },
+        "parameters": {
+            "$connections": {
+                "value": {
+                    "arm": {
+                        "connectionId": "/subscriptions/xxxxSUB_IDxxxx/resourceGroups/sftppoc/providers/Microsoft.Web/connections/arm",
+                        "connectionName": "arm",
+                        "id": "/subscriptions/xxxxSUB_IDxxxx/providers/Microsoft.Web/locations/xxxxRegionxxxx/managedApis/arm"
+                    }
+                }
+            }
+        },
+        "endpointsConfiguration": {
+            "workflow": {
+                "outgoingIpAddresses": [
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    }
+                ],
+                "accessEndpointIpAddresses": [
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    }
+                ]
+            },
+            "connector": {
+                "outgoingIpAddresses": [
+                    {
+                        "address": "xxxxIP addressxxxx"                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"                    },
+                    {
+                        "address": "xxxxIP addressxxxx"                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"
+                    },
+                    {
+                        "address": "xxxxIP addressxxxx"                    }
+                ]
+            }
+        }
+    },
+    "id": "/subscriptions/xxxxsub_idxxxx/resourceGroups/sftppoc/providers/Microsoft.Logic/workflows/bastioncreate",
+    "name": "bastioncreate",
+    "type": "Microsoft.Logic/workflows",
+    "location": "xxxxRegionxxxx",
+    "identity": {
+        "type": "SystemAssigned",
+        "principalId": "xxxxPricipalIDxxxx",
+        "tenantId": "xxxxTenantIDxxxx"
+    }
+}
+
